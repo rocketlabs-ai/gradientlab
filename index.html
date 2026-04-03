@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GradientLab — CSS Gradient Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ─── CSS Reset & Base ───────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #0c0c0e;
+  --bg1:        #111115;
+  --bg2:        #161619;
+  --bg3:        #1d1d22;
+  --border:     #2a2a30;
+  --border2:    #38383f;
+  --text:       #e8e8ec;
+  --text2:      #9999a8;
+  --text3:      #55556a;
+  --amber:      #f59e0b;
+  --amber2:     #fbbf24;
+  --amber-dim:  rgba(245,158,11,0.12);
+  --amber-glow: rgba(245,158,11,0.25);
+  --red:        #ef4444;
+  --green:      #22c55e;
+  --radius:     4px;
+  --radius2:    8px;
+  --mono:       'Space Mono', monospace;
+  --display:    'Syne', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Layout ────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ─── Header ────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 8px var(--amber); opacity: 1; }
+  50% { box-shadow: 0 0 16px var(--amber2), 0 0 32px var(--amber-glow); opacity: 0.8; }
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Buttons ───────────────────────────────────────── */
+.btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-dim);
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-amber {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #000;
+}
+.btn-amber:hover {
+  background: var(--amber2);
+  border-color: var(--amber2);
+  color: #000;
+  box-shadow: 0 0 16px var(--amber-glow);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text3);
+}
+.btn-ghost:hover {
+  border-color: var(--border2);
+  background: var(--bg2);
+  color: var(--text2);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: var(--radius);
+}
+
+/* ─── Preview Stage ─────────────────────────────────── */
+.preview-stage {
+  position: relative;
+  width: 100%;
+  height: 44vh;
+  min-height: 280px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  cursor: crosshair;
+}
+
+.preview-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: background 0.2s ease;
+}
+
+.preview-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 40px);
+  pointer-events: none;
+}
+
+.preview-label {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.preview-type-badge {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(245,158,11,0.3);
+  padding: 3px 10px;
+  border-radius: 2px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+/* ─── Main Layout ───────────────────────────────────── */
+.main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  flex: 1;
+}
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+  .preview-stage { height: 35vh; min-height: 220px; }
+}
+
+/* ─── Control Panel ─────────────────────────────────── */
+.panel {
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: calc(100vh - 53px - 44vh);
+}
+
+@media (max-width: 900px) {
+  .panel { max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+}
+
+.panel-section {
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+}
+
+.panel-section:last-child { border-bottom: none; }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── Type Tabs ─────────────────────────────────────── */
+.type-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: var(--bg);
+  padding: 3px;
+  border-radius: var(--radius2);
+  border: 1px solid var(--border);
+}
+
+.type-tab {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 4px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.type-tab.active {
+  background: var(--bg3);
+  color: var(--amber);
+  border: 1px solid var(--border2);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.type-tab:hover:not(.active) { color: var(--text2); }
+
+/* ─── Sub-panels ────────────────────────────────────── */
+.sub-panel {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+.sub-panel.active { display: flex; }
+
+/* ─── Form Controls ─────────────────────────────────── */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-label {
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
+  min-width: 56px;
+}
+
+.form-label.wide { min-width: 80px; }
+
+.input-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  width: 56px;
+  padding: 5px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--amber);
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.input-num::-webkit-inner-spin-button,
+.input-num::-webkit-outer-spin-button { -webkit-appearance: none; }
+.input-num:focus {
+  outline: none;
+  border-color: var(--amber);
+  background: var(--amber-dim);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 6px var(--amber-glow);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--bg);
+  cursor: pointer;
+}
+
+.select-input {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  flex: 1;
+}
+.select-input:focus { outline: none; border-color: var(--amber); }
+
+/* ─── Angle Dial ────────────────────────────────────── */
+.dial-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.angle-dial-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.angle-dial {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--border2);
+  cursor: grab;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.angle-dial:hover { border-color: var(--amber); }
+.angle-dial:active { cursor: grabbing; }
+
+.dial-tick {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 16px;
+  background: var(--amber);
+  transform-origin: 50% 100%;
+  border-radius: 1px;
+  box-shadow: 0 0 4px var(--amber-glow);
+}
+
+.dial-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+
+/* ─── Color Stops ───────────────────────────────────── */
+.stops-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+  animation: slide-in 0.2s ease;
+}
+.stop-row:hover { border-color: var(--border2); }
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stop-drag {
+  color: var(--text3);
+  cursor: grab;
+  font-size: 12px;
+  user-select: none;
+  padding: 0 2px;
+}
+.stop-drag:hover { color: var(--text2); }
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.1s ease, border-color 0.15s;
+  overflow: hidden;
+  position: relative;
+}
+.color-swatch:hover { transform: scale(1.1); border-color: var(--text2); }
+.color-swatch input[type="color"] {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.stop-pos-input {
+  font-family: var(--mono);
+  font-size: 11px;
+  width: 44px;
+  padding: 4px 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text2);
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.stop-pos-input::-webkit-inner-spin-button,
+.stop-pos-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.stop-pos-input:focus { outline: none; border-color: var(--amber); color: var(--amber); }
+
+.stop-pct { font-size: 10px; color: var(--text3); }
+
+.stop-hex {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  flex: 1;
+  letter-spacing: 0.04em;
+}
+
+.stop-remove {
+  font-size: 14px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s;
+  line-height: 1;
+  padding: 2px;
+}
+.stop-remove:hover { color: var(--red); }
+
+/* ─── Stop Track ────────────────────────────────────── */
+.stop-track-wrapper {
+  position: relative;
+  padding: 16px 0 8px;
+}
+
+.stop-track {
+  position: relative;
+  height: 20px;
+  border-radius: 10px;
+  overflow: visible;
+  cursor: crosshair;
+  border: 1px solid var(--border);
+}
+
+.stop-track-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.stop-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2.5px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+  cursor: grab;
+  transition: transform 0.1s ease;
+  z-index: 1;
+}
+.stop-handle:hover { transform: translate(-50%, -50%) scale(1.25); }
+.stop-handle.dragging { cursor: grabbing; transform: translate(-50%, -50%) scale(1.3); }
+
+/* ─── Presets Panel ─────────────────────────────────── */
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.preset-swatch {
+  aspect-ratio: 1;
+  border-radius: var(--radius2);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.preset-swatch::after {
+  content: attr(data-name);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  background: linear-gradient(transparent 50%, rgba(0,0,0,0.6));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.preset-swatch:hover {
+  border-color: var(--amber);
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+.preset-swatch:hover::after { opacity: 1; }
+
+/* ─── Right Panel: CSS Output ───────────────────────── */
+.output-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 20px 24px;
+  gap: 16px;
+  overflow: auto;
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.output-title {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.css-output-box {
+  position: relative;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  flex: 1;
+}
+
+.css-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  padding: 16px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 100px;
+}
+
+.css-token-prop { color: #7dd3fc; }
+.css-token-fn   { color: #a78bfa; }
+.css-token-num  { color: var(--amber); }
+.css-token-hex  { color: #86efac; }
+.css-token-comma { color: var(--text3); }
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.copy-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-dim);
+}
+.copy-btn.copied {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(34,197,94,0.1);
+}
+
+/* ─── Position XY control ───────────────────────────── */
+.xy-pad {
+  width: 80px;
+  height: 80px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  position: relative;
+  cursor: crosshair;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.xy-pad-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border) 20px),
+    repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border) 20px);
+  opacity: 0.5;
+}
+
+.xy-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 6px var(--amber-glow);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.xy-crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border2);
+  pointer-events: none;
+}
+.xy-crosshair-v {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border2);
+  pointer-events: none;
+}
+
+.xy-vals {
+  font-size: 10px;
+  color: var(--text3);
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  justify-content: center;
+}
+
+.xy-vals span { color: var(--amber); }
+
+/* ─── Footer ────────────────────────────────────────── */
+footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.footer-brand {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.footer-brand strong { color: var(--amber); }
+
+/* ─── Toasts ────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg3);
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: var(--radius2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 20px var(--amber-glow);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s ease;
+  pointer-events: none;
+  z-index: 999;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ─── Responsive adjustments ────────────────────────── */
+@media (max-width: 600px) {
+  .header { padding: 12px 16px; }
+  .output-panel { padding: 16px; }
+  .presets-grid { grid-template-columns: repeat(6, 1fr); }
+  footer { flex-direction: column; gap: 4px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      GradientLab
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="btn-random" title="Generate random gradient">&#9680; Random</button>
+      <button class="btn btn-amber" id="btn-copy-main">Copy CSS</button>
+    </div>
+  </header>
+
+  <!-- Preview Stage -->
+  <div class="preview-stage" id="preview-stage">
+    <div class="preview-canvas" id="preview-canvas"></div>
+    <div class="preview-overlay"></div>
+    <div class="preview-label">Live Preview</div>
+    <div class="preview-type-badge" id="preview-badge">linear</div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Left Panel: Controls -->
+    <aside class="panel">
+
+      <!-- Type -->
+      <div class="panel-section">
+        <div class="section-label">Type</div>
+        <div class="type-tabs">
+          <button class="type-tab active" data-type="linear">Linear</button>
+          <button class="type-tab" data-type="radial">Radial</button>
+          <button class="type-tab" data-type="conic">Conic</button>
+        </div>
+      </div>
+
+      <!-- Linear Controls -->
+      <div class="panel-section" id="ctrl-linear">
+        <div class="section-label">Direction</div>
+        <div class="sub-panel active">
+          <div class="dial-row">
+            <div class="angle-dial-wrapper">
+              <div class="angle-dial" id="angle-dial">
+                <div class="dial-tick" id="dial-tick"></div>
+                <div class="dial-center"></div>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div class="form-row">
+                <span class="form-label">Angle</span>
+                <input type="range" id="angle-range" min="0" max="359" value="135" style="flex:1;">
+                <input type="number" class="input-num" id="angle-num" min="0" max="359" value="135">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radial Controls -->
+      <div class="panel-section" id="ctrl-radial" style="display:none;">
+        <div class="section-label">Shape &amp; Position</div>
+        <div class="sub-panel active" style="gap:12px;">
+          <div class="form-row">
+            <span class="form-label wide">Shape</span>
+            <select class="select-input" id="radial-shape">
+              <option value="ellipse">Ellipse</option>
+              <option value="circle">Circle</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <span class="form-label wide">Size</span>
+            <select class="select-input" id="radial-size">
+              <option value="farthest-corner">Farthest Corner</option>
+              <option value="closest-corner">Closest Corner</option>
+              <option value="farthest-side">Farthest Side</option>
+              <option value="closest-side">Closest Side</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-label" style="margin-bottom:8px;">Position</div>
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <div>
+                <div class="xy-pad" id="radial-xy">
+                  <div class="xy-pad-grid"></div>
+                  <div class="xy-crosshair-h"></div>
+                  <div class="xy-crosshair-v"></div>
+                  <div class="xy-handle" id="radial-handle" style="left:50%;top:50%;"></div>
+                </div>
+                <div class="xy-vals">X: <span id="radial-x-val">50</span>%  Y: <span id="radial-y-val">50</span>%</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                <div class="form-row">
+                  <span class="form-label">X</span>
+                  <input type="range" id="radial-x" min="0" max="100" value="50" style="flex:1;">
+                  <input type="number" class="input-num" id="radial-x-num" min="0" max="100" value="50">
+                </div>
+                <div class="form-row">
+                  <span class="form-label">Y</span>
+                  <input type="range" id="radial-y" min="0" max="100" value="50" style="flex:1;">
+                  <input type="number" class="input-num" id="radial-y-num" min="0" max="100" value="50">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conic Controls -->
+      <div class="panel-section" id="ctrl-conic" style="display:none;">
+        <div class="section-label">Angle &amp; Position</div>
+        <div class="sub-panel active">
+          <div class="dial-row">
+            <div class="angle-dial-wrapper">
+              <div class="angle-dial" id="conic-dial">
+                <div class="dial-tick" id="conic-dial-tick"></div>
+                <div class="dial-center"></div>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div class="form-row">
+                <span class="form-label">Angle</span>
+                <input type="range" id="conic-angle-range" min="0" max="359" value="0">
+                <input type="number" class="input-num" id="conic-angle-num" min="0" max="359" value="0">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <span class="form-label wide">Pos X</span>
+            <input type="range" id="conic-x" min="0" max="100" value="50" style="flex:1;">
+            <input type="number" class="input-num" id="conic-x-num" min="0" max="100" value="50">
+          </div>
+          <div class="form-row">
+            <span class="form-label wide">Pos Y</span>
+            <input type="range" id="conic-y" min="0" max="100" value="50" style="flex:1;">
+            <input type="number" class="input-num" id="conic-y-num" min="0" max="100" value="50">
+          </div>
+        </div>
+      </div>
+
+      <!-- Color Stops -->
+      <div class="panel-section">
+        <div class="section-label">Color Stops</div>
+        <!-- Track -->
+        <div class="stop-track-wrapper">
+          <div class="stop-track" id="stop-track">
+            <div class="stop-track-bg" id="stop-track-bg"></div>
+          </div>
+        </div>
+        <!-- Stops List -->
+        <div class="stops-container" id="stops-container"></div>
+        <div style="margin-top:10px; display:flex; gap:6px;">
+          <button class="btn" id="btn-add-stop" style="flex:1;">+ Add Stop</button>
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <div class="panel-section">
+        <div class="section-label">Presets</div>
+        <div class="presets-grid" id="presets-grid"></div>
+      </div>
+
+    </aside>
+
+    <!-- Right Panel: CSS Output -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title">CSS Output</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:10px;color:var(--text3);letter-spacing:0.06em;">includes -webkit-</span>
+        </div>
+      </div>
+      <div class="css-output-box">
+        <pre class="css-code" id="css-output"></pre>
+        <button class="copy-btn" id="copy-css-btn">Copy</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-brand">Built by <strong>Rocket Labs AI</strong></div>
+    <div>GradientLab &mdash; Visual CSS Gradient Generator</div>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   GradientLab — Core Engine
+═══════════════════════════════════════════════════════ */
+
+/* ─── State ───────────────────────────────────────────── */
+const state = {
+  type: 'linear',
+  angle: 135,
+  radial: { shape: 'ellipse', size: 'farthest-corner', x: 50, y: 50 },
+  conic:  { angle: 0, x: 50, y: 50 },
+  stops: [
+    { color: '#ff6b6b', pos: 0 },
+    { color: '#feca57', pos: 50 },
+    { color: '#48dbfb', pos: 100 },
+  ],
+};
+
+/* ─── Presets ─────────────────────────────────────────── */
+const PRESETS = [
+  { name: 'Sunset',    type:'linear', angle:160, stops:[{color:'#ff6b6b',pos:0},{color:'#feca57',pos:45},{color:'#ff9ff3',pos:100}] },
+  { name: 'Ocean',     type:'linear', angle:135, stops:[{color:'#0652dd',pos:0},{color:'#1289a7',pos:50},{color:'#c4e538',pos:100}] },
+  { name: 'Aurora',    type:'linear', angle:115, stops:[{color:'#0f3460',pos:0},{color:'#16213e',pos:30},{color:'#0f3460',pos:50},{color:'#4ca1af',pos:80},{color:'#22d160',pos:100}] },
+  { name: 'Neon',      type:'linear', angle:90,  stops:[{color:'#f953c6',pos:0},{color:'#b91d73',pos:100}] },
+  { name: 'Forest',    type:'radial', radial:{shape:'ellipse',size:'farthest-corner',x:30,y:30}, stops:[{color:'#134e5e',pos:0},{color:'#71b280',pos:100}] },
+  { name: 'Infrared',  type:'linear', angle:45,  stops:[{color:'#000000',pos:0},{color:'#ff0000',pos:50},{color:'#ffff00',pos:100}] },
+  { name: 'Candy',     type:'conic',  conic:{angle:0,x:50,y:50}, stops:[{color:'#ff6b6b',pos:0},{color:'#feca57',pos:25},{color:'#48dbfb',pos:50},{color:'#ff9ff3',pos:75},{color:'#ff6b6b',pos:100}] },
+  { name: 'Midnight',  type:'linear', angle:180, stops:[{color:'#0a0a0a',pos:0},{color:'#1a1a2e',pos:50},{color:'#16213e',pos:100}] },
+  { name: 'Gold',      type:'linear', angle:135, stops:[{color:'#f7971e',pos:0},{color:'#ffd200',pos:100}] },
+  { name: 'Rose',      type:'radial', radial:{shape:'circle',size:'farthest-corner',x:50,y:50}, stops:[{color:'#f953c6',pos:0},{color:'#b91d73',pos:60},{color:'#000000',pos:100}] },
+  { name: 'Prism',     type:'conic',  conic:{angle:45,x:50,y:50}, stops:[{color:'#ff0000',pos:0},{color:'#ff7700',pos:16},{color:'#ffff00',pos:33},{color:'#00ff00',pos:50},{color:'#0000ff',pos:66},{color:'#8b00ff',pos:83},{color:'#ff0000',pos:100}] },
+  { name: 'Steel',     type:'linear', angle:90,  stops:[{color:'#4b6cb7',pos:0},{color:'#182848',pos:100}] },
+];
+
+/* ─── DOM refs ────────────────────────────────────────── */
+const previewCanvas  = document.getElementById('preview-canvas');
+const previewBadge   = document.getElementById('preview-badge');
+const stopsContainer = document.getElementById('stops-container');
+const stopTrack      = document.getElementById('stop-track');
+const stopTrackBg    = document.getElementById('stop-track-bg');
+const cssOutput      = document.getElementById('css-output');
+const copyCssBtn     = document.getElementById('copy-css-btn');
+const toast          = document.getElementById('toast');
+
+/* ─── Gradient Builder ────────────────────────────────── */
+function buildGradient() {
+  const sorted = [...state.stops].sort((a,b) => a.pos - b.pos);
+  const stopStr = sorted.map(s => `${s.color} ${s.pos}%`).join(', ');
+
+  if (state.type === 'linear') {
+    return `linear-gradient(${state.angle}deg, ${stopStr})`;
+  } else if (state.type === 'radial') {
+    const r = state.radial;
+    return `radial-gradient(${r.shape} ${r.size} at ${r.x}% ${r.y}%, ${stopStr})`;
+  } else {
+    const c = state.conic;
+    return `conic-gradient(from ${c.angle}deg at ${c.x}% ${c.y}%, ${stopStr})`;
+  }
+}
+
+function buildWebkit() {
+  const sorted = [...state.stops].sort((a,b) => a.pos - b.pos);
+  const stopStr = sorted.map(s => `${s.color} ${s.pos}%`).join(', ');
+
+  if (state.type === 'linear') {
+    return `-webkit-linear-gradient(${state.angle}deg, ${stopStr})`;
+  } else if (state.type === 'radial') {
+    const r = state.radial;
+    return `-webkit-radial-gradient(${r.x}% ${r.y}%, ${r.shape} ${r.size}, ${stopStr})`;
+  }
+  return null;
+}
+
+/* ─── Render ──────────────────────────────────────────── */
+function render() {
+  const g = buildGradient();
+  previewCanvas.style.background = g;
+  previewBadge.textContent = state.type;
+
+  // Update track
+  const trackG = buildTrackGradient();
+  stopTrackBg.style.background = trackG;
+
+  // CSS Output
+  const webkit = buildWebkit();
+  let css = `background: ${g};`;
+  if (webkit) {
+    css = `background: ${webkit};\nbackground: ${g};`;
+  }
+  css = highlightCSS(css);
+  cssOutput.innerHTML = css;
+
+  renderStopHandles();
+}
+
+function buildTrackGradient() {
+  const sorted = [...state.stops].sort((a,b) => a.pos - b.pos);
+  const stopStr = sorted.map(s => `${s.color} ${s.pos}%`).join(', ');
+  return `linear-gradient(to right, ${stopStr})`;
+}
+
+/* ─── CSS Syntax Highlight ────────────────────────────── */
+function highlightCSS(raw) {
+  return raw
+    .replace(/(background)/g, '<span class="css-token-prop">$1</span>')
+    .replace(/(linear-gradient|radial-gradient|conic-gradient|-webkit-linear-gradient|-webkit-radial-gradient)/g, '<span class="css-token-fn">$1</span>')
+    .replace(/(#[0-9a-fA-F]{3,8})/g, '<span class="css-token-hex">$1</span>')
+    .replace(/(\d+(?:\.\d+)?(?:deg|%|px|em))/g, '<span class="css-token-num">$1</span>');
+}
+
+/* ─── Stop Handles on Track ───────────────────────────── */
+function renderStopHandles() {
+  const existing = stopTrack.querySelectorAll('.stop-handle');
+  existing.forEach(e => e.remove());
+
+  state.stops.forEach((stop, i) => {
+    const handle = document.createElement('div');
+    handle.className = 'stop-handle';
+    handle.style.left = stop.pos + '%';
+    handle.style.background = stop.color;
+    handle.title = stop.color + ' ' + stop.pos + '%';
+
+    let dragging = false;
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      dragging = true;
+      handle.classList.add('dragging');
+
+      const onMove = (me) => {
+        if (!dragging) return;
+        const rect = stopTrack.getBoundingClientRect();
+        let pct = ((me.clientX - rect.left) / rect.width) * 100;
+        pct = Math.max(0, Math.min(100, Math.round(pct)));
+        state.stops[i].pos = pct;
+        render();
+        renderStopRows();
+      };
+      const onUp = () => {
+        dragging = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    // Touch
+    handle.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const onMove = (te) => {
+        const rect = stopTrack.getBoundingClientRect();
+        let pct = ((te.touches[0].clientX - rect.left) / rect.width) * 100;
+        pct = Math.max(0, Math.min(100, Math.round(pct)));
+        state.stops[i].pos = pct;
+        render();
+        renderStopRows();
+      };
+      const onEnd = () => {
+        handle.classList.remove('dragging');
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+      };
+      document.addEventListener('touchmove', onMove, {passive:false});
+      document.addEventListener('touchend', onEnd);
+    }, {passive:false});
+
+    stopTrack.appendChild(handle);
+  });
+}
+
+/* ─── Click track to add stop ─────────────────────────── */
+stopTrack.addEventListener('click', (e) => {
+  if (e.target !== stopTrack && e.target !== stopTrackBg) return;
+  const rect = stopTrack.getBoundingClientRect();
+  let pct = ((e.clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, Math.round(pct)));
+  const newColor = '#' + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
+  state.stops.push({ color: newColor, pos: pct });
+  renderStopRows();
+  render();
+});
+
+/* ─── Stop Rows ───────────────────────────────────────── */
+function renderStopRows() {
+  stopsContainer.innerHTML = '';
+  state.stops.forEach((stop, i) => {
+    const row = document.createElement('div');
+    row.className = 'stop-row';
+    row.draggable = true;
+
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'stop-drag';
+    dragHandle.innerHTML = '&#8942;&#8942;';
+    dragHandle.title = 'Drag to reorder';
+
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch';
+    swatch.style.background = stop.color;
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = stop.color;
+    colorInput.addEventListener('input', () => {
+      state.stops[i].color = colorInput.value;
+      swatch.style.background = colorInput.value;
+      hexLabel.textContent = colorInput.value.toUpperCase();
+      render();
+    });
+    swatch.appendChild(colorInput);
+
+    const hexLabel = document.createElement('span');
+    hexLabel.className = 'stop-hex';
+    hexLabel.textContent = stop.color.toUpperCase();
+
+    const posInput = document.createElement('input');
+    posInput.type = 'number';
+    posInput.className = 'stop-pos-input';
+    posInput.min = 0; posInput.max = 100;
+    posInput.value = stop.pos;
+    posInput.addEventListener('input', () => {
+      let v = parseInt(posInput.value);
+      if (isNaN(v)) return;
+      v = Math.max(0, Math.min(100, v));
+      state.stops[i].pos = v;
+      render();
+    });
+
+    const pctLabel = document.createElement('span');
+    pctLabel.className = 'stop-pct';
+    pctLabel.textContent = '%';
+
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'stop-remove';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.title = 'Remove stop';
+    removeBtn.addEventListener('click', () => {
+      if (state.stops.length <= 2) return showToast('Minimum 2 stops');
+      state.stops.splice(i, 1);
+      renderStopRows();
+      render();
+    });
+
+    row.appendChild(dragHandle);
+    row.appendChild(swatch);
+    row.appendChild(hexLabel);
+    row.appendChild(posInput);
+    row.appendChild(pctLabel);
+    row.appendChild(removeBtn);
+
+    // Drag-to-reorder
+    row.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', i);
+      row.style.opacity = '0.4';
+    });
+    row.addEventListener('dragend', () => { row.style.opacity = ''; });
+    row.addEventListener('dragover', (e) => { e.preventDefault(); row.style.borderColor = 'var(--amber)'; });
+    row.addEventListener('dragleave', () => { row.style.borderColor = ''; });
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.style.borderColor = '';
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      if (fromIdx === i) return;
+      const moved = state.stops.splice(fromIdx, 1)[0];
+      state.stops.splice(i, 0, moved);
+      renderStopRows();
+      render();
+    });
+
+    stopsContainer.appendChild(row);
+  });
+}
+
+/* ─── Add Stop ────────────────────────────────────────── */
+document.getElementById('btn-add-stop').addEventListener('click', () => {
+  if (state.stops.length >= 8) return showToast('Max 8 stops');
+  const last = state.stops[state.stops.length - 1];
+  const newPos = Math.min(100, last.pos + Math.round((100 - last.pos) / 2));
+  state.stops.push({ color: '#ffffff', pos: newPos });
+  renderStopRows();
+  render();
+});
+
+/* ─── Type Tabs ───────────────────────────────────────── */
+document.querySelectorAll('.type-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.type = tab.dataset.type;
+
+    document.getElementById('ctrl-linear').style.display = state.type === 'linear' ? '' : 'none';
+    document.getElementById('ctrl-radial').style.display = state.type === 'radial' ? '' : 'none';
+    document.getElementById('ctrl-conic').style.display  = state.type === 'conic'  ? '' : 'none';
+
+    render();
+  });
+});
+
+/* ─── Angle Controls ──────────────────────────────────── */
+function setupAngle(rangeId, numId, dialId, tickId, onChange) {
+  const range = document.getElementById(rangeId);
+  const num   = document.getElementById(numId);
+  const dial  = document.getElementById(dialId);
+  const tick  = document.getElementById(tickId);
+
+  function updateDial(val) {
+    // tick points from center upward, rotates clockwise with angle
+    tick.style.transform = `translateX(-50%) rotate(${val}deg) translateY(-100%)`;
+  }
+
+  function setValue(v) {
+    v = ((v % 360) + 360) % 360;
+    range.value = v;
+    num.value = v;
+    updateDial(v);
+    onChange(v);
+  }
+
+  range.addEventListener('input', () => setValue(parseInt(range.value)));
+  num.addEventListener('input', () => setValue(parseInt(num.value) || 0));
+
+  // Dial drag
+  let dialDragging = false, startAngle = 0, startVal = 0;
+
+  function getDialAngle(e, rect) {
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const mx = e.clientX || (e.touches && e.touches[0].clientX);
+    const my = e.clientY || (e.touches && e.touches[0].clientY);
+    return Math.atan2(mx - cx, cy - my) * (180 / Math.PI);
+  }
+
+  dial.addEventListener('mousedown', (e) => {
+    dialDragging = true;
+    const rect = dial.getBoundingClientRect();
+    startAngle = getDialAngle(e, rect);
+    startVal = parseInt(num.value) || 0;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dialDragging) return;
+    const rect = dial.getBoundingClientRect();
+    const a = getDialAngle(e, rect);
+    let delta = a - startAngle;
+    setValue(Math.round(startVal + delta));
+  });
+
+  document.addEventListener('mouseup', () => { dialDragging = false; });
+
+  // Initialize
+  updateDial(parseInt(num.value) || 0);
+}
+
+setupAngle('angle-range', 'angle-num', 'angle-dial', 'dial-tick', (v) => {
+  state.angle = v;
+  render();
+});
+
+setupAngle('conic-angle-range', 'conic-angle-num', 'conic-dial', 'conic-dial-tick', (v) => {
+  state.conic.angle = v;
+  render();
+});
+
+/* ─── Radial Controls ─────────────────────────────────── */
+document.getElementById('radial-shape').addEventListener('change', (e) => {
+  state.radial.shape = e.target.value; render();
+});
+document.getElementById('radial-size').addEventListener('change', (e) => {
+  state.radial.size = e.target.value; render();
+});
+
+function syncRadialXY(x, y) {
+  state.radial.x = x;
+  state.radial.y = y;
+  document.getElementById('radial-x').value = x;
+  document.getElementById('radial-x-num').value = x;
+  document.getElementById('radial-y').value = y;
+  document.getElementById('radial-y-num').value = y;
+  document.getElementById('radial-x-val').textContent = x;
+  document.getElementById('radial-y-val').textContent = y;
+  document.getElementById('radial-handle').style.left = x + '%';
+  document.getElementById('radial-handle').style.top  = y + '%';
+  render();
+}
+
+document.getElementById('radial-x').addEventListener('input', (e) => {
+  syncRadialXY(parseInt(e.target.value), state.radial.y);
+});
+document.getElementById('radial-x-num').addEventListener('input', (e) => {
+  syncRadialXY(parseInt(e.target.value)||0, state.radial.y);
+});
+document.getElementById('radial-y').addEventListener('input', (e) => {
+  syncRadialXY(state.radial.x, parseInt(e.target.value));
+});
+document.getElementById('radial-y-num').addEventListener('input', (e) => {
+  syncRadialXY(state.radial.x, parseInt(e.target.value)||0);
+});
+
+// XY pad
+setupXYPad('radial-xy', (x, y) => syncRadialXY(x, y));
+
+function setupXYPad(id, callback) {
+  const pad = document.getElementById(id);
+  let down = false;
+
+  function handle(e) {
+    const rect = pad.getBoundingClientRect();
+    const mx = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const my = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    const x = Math.max(0, Math.min(100, Math.round((mx / rect.width) * 100)));
+    const y = Math.max(0, Math.min(100, Math.round((my / rect.height) * 100)));
+    callback(x, y);
+  }
+
+  pad.addEventListener('mousedown', (e) => { down = true; handle(e); e.preventDefault(); });
+  document.addEventListener('mousemove', (e) => { if (down) handle(e); });
+  document.addEventListener('mouseup', () => { down = false; });
+  pad.addEventListener('touchstart', (e) => { handle(e); e.preventDefault(); }, {passive:false});
+  pad.addEventListener('touchmove', (e) => { handle(e); e.preventDefault(); }, {passive:false});
+}
+
+/* ─── Conic Controls ──────────────────────────────────── */
+function syncConicXY(x, y) {
+  state.conic.x = x;
+  state.conic.y = y;
+  document.getElementById('conic-x').value = x;
+  document.getElementById('conic-x-num').value = x;
+  document.getElementById('conic-y').value = y;
+  document.getElementById('conic-y-num').value = y;
+  render();
+}
+
+['conic-x','conic-y'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    syncConicXY(
+      parseInt(document.getElementById('conic-x').value),
+      parseInt(document.getElementById('conic-y').value)
+    );
+  });
+});
+['conic-x-num','conic-y-num'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    syncConicXY(
+      parseInt(document.getElementById('conic-x-num').value)||0,
+      parseInt(document.getElementById('conic-y-num').value)||0
+    );
+  });
+});
+
+/* ─── Presets ─────────────────────────────────────────── */
+function buildPresetGradient(p) {
+  const stopStr = p.stops.map(s => `${s.color} ${s.pos}%`).join(', ');
+  if (p.type === 'linear') return `linear-gradient(${p.angle||135}deg, ${stopStr})`;
+  if (p.type === 'radial') {
+    const r = p.radial || {shape:'ellipse',size:'farthest-corner',x:50,y:50};
+    return `radial-gradient(${r.shape} ${r.size} at ${r.x}% ${r.y}%, ${stopStr})`;
+  }
+  const c = p.conic || {angle:0,x:50,y:50};
+  return `conic-gradient(from ${c.angle}deg at ${c.x}% ${c.y}%, ${stopStr})`;
+}
+
+function applyPreset(p) {
+  state.type = p.type;
+  state.stops = p.stops.map(s => ({...s}));
+
+  if (p.type === 'linear') state.angle = p.angle || 135;
+  if (p.type === 'radial' && p.radial) Object.assign(state.radial, p.radial);
+  if (p.type === 'conic' && p.conic)   Object.assign(state.conic, p.conic);
+
+  // Update type tabs
+  document.querySelectorAll('.type-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.type === p.type);
+  });
+  document.getElementById('ctrl-linear').style.display = p.type === 'linear' ? '' : 'none';
+  document.getElementById('ctrl-radial').style.display = p.type === 'radial' ? '' : 'none';
+  document.getElementById('ctrl-conic').style.display  = p.type === 'conic'  ? '' : 'none';
+
+  // Sync angle sliders
+  if (p.type === 'linear') {
+    document.getElementById('angle-range').value = state.angle;
+    document.getElementById('angle-num').value = state.angle;
+    document.getElementById('dial-tick').style.transform = `translateX(-50%) rotate(${state.angle}deg) translateY(-100%)`;
+  }
+  if (p.type === 'radial') {
+    syncRadialXY(state.radial.x, state.radial.y);
+  }
+  if (p.type === 'conic') {
+    document.getElementById('conic-angle-range').value = state.conic.angle;
+    document.getElementById('conic-angle-num').value = state.conic.angle;
+    document.getElementById('conic-dial-tick').style.transform = `translateX(-50%) rotate(${state.conic.angle}deg) translateY(-100%)`;
+  }
+
+  renderStopRows();
+  render();
+}
+
+const presetsGrid = document.getElementById('presets-grid');
+PRESETS.forEach(p => {
+  const swatch = document.createElement('div');
+  swatch.className = 'preset-swatch';
+  swatch.style.background = buildPresetGradient(p);
+  swatch.dataset.name = p.name;
+  swatch.title = p.name;
+  swatch.addEventListener('click', () => applyPreset(p));
+  presetsGrid.appendChild(swatch);
+});
+
+/* ─── Random ──────────────────────────────────────────── */
+function randomColor() {
+  // Bias toward saturated colors
+  const h = Math.random() * 360;
+  const s = 60 + Math.random() * 40;
+  const l = 40 + Math.random() * 30;
+  return hslToHex(h, s, l);
+}
+
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const v = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * v).toString(16).padStart(2, '0');
+  };
+  return '#' + f(0) + f(8) + f(4);
+}
+
+document.getElementById('btn-random').addEventListener('click', () => {
+  const types = ['linear','radial','conic'];
+  const t = types[Math.floor(Math.random() * types.length)];
+  const numStops = 2 + Math.floor(Math.random() * 3);
+  const stops = [];
+  for (let i = 0; i < numStops; i++) {
+    stops.push({ color: randomColor(), pos: Math.round((i / (numStops - 1)) * 100) });
+  }
+
+  const p = {
+    type: t,
+    stops,
+    angle: Math.floor(Math.random() * 360),
+    radial: { shape: Math.random() > 0.5 ? 'circle' : 'ellipse', size: 'farthest-corner', x: 20 + Math.floor(Math.random() * 60), y: 20 + Math.floor(Math.random() * 60) },
+    conic: { angle: Math.floor(Math.random() * 360), x: 30 + Math.floor(Math.random() * 40), y: 30 + Math.floor(Math.random() * 40) }
+  };
+
+  applyPreset(p);
+  showToast('Random gradient generated');
+});
+
+/* ─── Copy CSS ────────────────────────────────────────── */
+function getRawCSS() {
+  const g = buildGradient();
+  const webkit = buildWebkit();
+  let css = `background: ${g};`;
+  if (webkit) css = `background: ${webkit};\nbackground: ${g};`;
+  return css;
+}
+
+function doCopy() {
+  const text = getRawCSS();
+  navigator.clipboard.writeText(text).then(() => {
+    copyCssBtn.classList.add('copied');
+    copyCssBtn.textContent = 'Copied!';
+    showToast('CSS copied to clipboard');
+    setTimeout(() => {
+      copyCssBtn.classList.remove('copied');
+      copyCssBtn.textContent = 'Copy';
+    }, 2000);
+  });
+}
+
+copyCssBtn.addEventListener('click', doCopy);
+document.getElementById('btn-copy-main').addEventListener('click', doCopy);
+
+/* ─── Toast ───────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+/* ─── Init ────────────────────────────────────────────── */
+function init() {
+  renderStopRows();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
